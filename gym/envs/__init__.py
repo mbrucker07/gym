@@ -345,6 +345,37 @@ for reward_type in ['sparse', 'dense']:
         'reward_type': reward_type,
     }
 
+    # myUR5
+
+    register(
+        id='myUR5GripperFind{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:myUR5GripperFindEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
+        id='myUR5GripperFall{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:myUR5GripperFallEnv',
+        kwargs=kwargs,
+        max_episode_steps=100,
+    )
+
+
+    register(
+        id='myUR5Poke{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:myUR5PokeEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
+        id='myUR5Find{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:myUR5FindEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
     # Fetch
     register(
         id='FetchSlide{}-v1'.format(suffix),

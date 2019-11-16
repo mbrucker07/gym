@@ -12,3 +12,8 @@ from gym.envs.robotics.hand.manipulate import HandPenEnv
 from gym.envs.robotics.hand.manipulate_touch_sensors import HandBlockTouchSensorsEnv
 from gym.envs.robotics.hand.manipulate_touch_sensors import HandEggTouchSensorsEnv
 from gym.envs.robotics.hand.manipulate_touch_sensors import HandPenTouchSensorsEnv
+
+from gym.envs.robotics.myUR5.poke import myUR5PokeEnv
+from gym.envs.robotics.myUR5.find import myUR5FindEnv
+from gym.envs.robotics.myUR5Gripper.find import myUR5GripperFindEnv
+from gym.envs.robotics.myUR5Gripper.fall import myUR5GripperFallEnv
