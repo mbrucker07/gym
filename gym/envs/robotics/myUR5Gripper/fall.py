@@ -47,8 +47,8 @@ class myUR5GripperFallEnv(robot_env.RobotEnv, EzPickle):
         self.target_in_the_air = False
         self.target_offset = 0.
         self.obj_range = 0.
-        self.target_range = 0.2
-        self.distance_threshold = 0.05
+        self.target_range = 0.8 #default:0.2
+        self.distance_threshold = 0.15 #default 0.05
         self.reward_type = reward_type
         self.mocap_name = 'robot:mocap' # type body
         self.target_name = 'target0' # type body
@@ -180,7 +180,7 @@ class myUR5GripperFallEnv(robot_env.RobotEnv, EzPickle):
     def _sample_goal(self):
         # TODO: sample goal (change range)
         x = self.np_random.uniform(-self.target_range, self.target_range, size=3)
-        goal = self.initial_object_xpos[:3] + x #initial_gripper_xpos is defined in _env_setup
+        goal = x# goal = self.initial_object_xpos[:3] + x #initial_gripper_xpos is defined in _env_setup
         goal[2] = 0.
         return goal.copy()
 
