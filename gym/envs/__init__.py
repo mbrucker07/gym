@@ -399,6 +399,34 @@ for reward_type in ['sparse', 'dense']:
     )
 
     register(
+        id='FetchSlideNew{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:FetchSlideNewEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
+        id='FetchPushNew{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:FetchPushNewEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
+        id='FetchPickAndPlaceNew{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:FetchPickAndPlaceNewEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
+        id='FetchReachNew{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:FetchReachNewEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
         id='FetchReach{}-v1'.format(suffix),
         entry_point='gym.envs.robotics:FetchReachEnv',
         kwargs=kwargs,
