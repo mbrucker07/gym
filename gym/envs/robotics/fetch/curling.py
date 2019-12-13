@@ -174,7 +174,7 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         elif self.adapt_dict["mode"] == 'uniform':
             decision = self.np_random.uniform(0, 6)
         index = int(np.floor(decision))
-        print(self.adapt_dict["mode"])
+        #print(self.adapt_dict["mode"])
         #print("Decision {} --> {}".format(decision, index))
         marks = ['mark0a', 'mark1a', 'mark2a', 'mark3a', 'mark4a', 'mark5a']
         goal = self.sim.data.get_site_xpos(marks[index]).copy()[:3] + 0.5*diag
