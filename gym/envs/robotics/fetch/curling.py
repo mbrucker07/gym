@@ -39,7 +39,6 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         model_path = MODEL_XML_PATH
         n_substeps = 20
         self.custom = True
-        self.mode = "standard"
         self.further = False
         self.gripper_extra_height = 0.2
         self.block_gripper = True
@@ -51,6 +50,9 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.init_range = 0.1
         self.distance_threshold = 0.1
         self.reward_type = reward_type
+        # TODO: configure adaption parameters
+        self.adapt_dict=dict()
+        self.adapt_dict["mode"] = "standard"
 
         super(FetchCurlingEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
@@ -164,23 +166,20 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         return True
 
     def _sample_goal(self):
-        if self.custom:
-            diag = self.sim.data.get_site_xpos('mark1b').copy()[:3] - self.sim.data.get_site_xpos('mark0a').copy()[:3]
-            dist_x = diag[0]/2
-            dist_y = diag[1]/2
-            if self.mode == 'standard':
-                decision = self.np_random.uniform(5, 6)
-            elif self.mode == 'uniform':
-                decision = self.np_random.uniform(0, 6)
-            index = int(np.floor(decision))
-            print("Decision {} --> {}".format(decision, index))
-            marks = ['mark0a', 'mark1a', 'mark2a', 'mark3a', 'mark4a', 'mark5a']
-            goal = self.sim.data.get_site_xpos(marks[index]).copy()[:3] + 0.5*diag
-            goal[0] += self.np_random.uniform(-dist_x, dist_x)
-            goal[1] += self.np_random.uniform(-dist_y, dist_y)
-
-
-
+        diag = self.sim.data.get_site_xpos('mark1b').copy()[:3] - self.sim.data.get_site_xpos('mark0a').copy()[:3]
+        dist_x = diag[0]/2
+        dist_y = diag[1]/2
+        if self.adapt_dict["mode"] == 'standard':
+            decision = self.np_random.uniform(5, 6)
+        elif self.adapt_dict["mode"] == 'uniform':
+            decision = self.np_random.uniform(0, 6)
+        index = int(np.floor(decision))
+        print(self.adapt_dict["mode"])
+        #print("Decision {} --> {}".format(decision, index))
+        marks = ['mark0a', 'mark1a', 'mark2a', 'mark3a', 'mark4a', 'mark5a']
+        goal = self.sim.data.get_site_xpos(marks[index]).copy()[:3] + 0.5*diag
+        goal[0] += self.np_random.uniform(-dist_x, dist_x)
+        goal[1] += self.np_random.uniform(-dist_y, dist_y)
 
         return goal.copy()
 
@@ -204,13 +203,13 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
 
         # Extract information for sampling goals.
         self.initial_gripper_xpos = self.sim.data.get_site_xpos('robot0:grip').copy()
-        print("Initial_gripper_xpos: {}".format(self.initial_gripper_xpos))
+        #print("Initial_gripper_xpos: {}".format(self.initial_gripper_xpos))
 
         # initial markers
         object_xpos = self.initial_gripper_xpos
         object_xpos[2] = 0.4
-        print("initial:")
-        print(self.initial_gripper_xpos)
+        #print("initial:")
+        #print(self.initial_gripper_xpos)
         #TODO: der index 2 ist nur zufällig gewählt, da muss man aufpassen!
         sites_offset = (self.sim.data.site_xpos - self.sim.model.site_pos).copy()[2]
         #print("sites_offset:")
