@@ -406,6 +406,13 @@ for reward_type in ['sparse', 'dense']:
     )
 
     register(
+        id='FetchCurling{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:FetchCurlingEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
+
+    register(
         id='FetchPushNew{}-v1'.format(suffix),
         entry_point='gym.envs.robotics:FetchPushNewEnv',
         kwargs=kwargs,

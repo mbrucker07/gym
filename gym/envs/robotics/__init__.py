@@ -9,6 +9,7 @@ from gym.envs.robotics.fetch.slide_new import FetchSlideNewEnv
 from gym.envs.robotics.fetch.push_new import FetchPushNewEnv
 from gym.envs.robotics.fetch.pick_and_place_new import FetchPickAndPlaceNewEnv
 from gym.envs.robotics.fetch.reach_new import FetchReachNewEnv
+from gym.envs.robotics.fetch.curling import FetchCurlingEnv
 
 from gym.envs.robotics.hand.reach import HandReachEnv
 from gym.envs.robotics.hand.manipulate import HandBlockEnv
