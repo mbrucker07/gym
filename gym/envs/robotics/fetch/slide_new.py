@@ -43,9 +43,9 @@ class FetchSlideNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.block_gripper = True
         self.has_object = True
         self.target_in_the_air = False
-        self.target_offset = np.array([0.7, 0.0, 0.0])
+        self.target_offset = np.array([0.4, 0.0, 0.0])
         self.obj_range = 0.1
-        self.target_range = 0.6
+        self.target_range = 0.3
         self.distance_threshold = 0.1
         self.reward_type = reward_type
 
