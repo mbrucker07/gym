@@ -52,7 +52,7 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.reward_type = reward_type
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
-        self.adapt_dict["mode"] = "standard"
+        self.adapt_dict["mode"] = "uniform"
 
         super(FetchCurlingEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
@@ -169,10 +169,23 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         diag = self.sim.data.get_site_xpos('mark1b').copy()[:3] - self.sim.data.get_site_xpos('mark0a').copy()[:3]
         dist_x = diag[0]/2
         dist_y = diag[1]/2
-        if self.adapt_dict["mode"] == 'standard':
-            decision = self.np_random.uniform(5, 6)
-        elif self.adapt_dict["mode"] == 'uniform':
+
+        if self.adapt_dict["mode"] == 'uniform':
             decision = self.np_random.uniform(0, 6)
+        elif self.adapt_dict["mode"] == 'z1':
+            decision = self.np_random.uniform(0, 1)
+        elif self.adapt_dict["mode"] == 'z2':
+            decision = self.np_random.uniform(1, 2)
+        elif self.adapt_dict["mode"] == 'z1':
+            decision = self.np_random.uniform(2, 3)
+        elif self.adapt_dict["mode"] == 'z1':
+            decision = self.np_random.uniform(3, 4)
+        elif self.adapt_dict["mode"] == 'z1':
+            decision = self.np_random.uniform(4, 5)
+        elif self.adapt_dict["mode"] == 'z6':
+            decision = self.np_random.uniform(5, 6)
+        else:
+            decision = 0.4
         index = int(np.floor(decision))
         #print(self.adapt_dict["mode"])
         #print("Decision {} --> {}".format(decision, index))
@@ -180,6 +193,9 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         goal = self.sim.data.get_site_xpos(marks[index]).copy()[:3] + 0.5*diag
         goal[0] += self.np_random.uniform(-dist_x, dist_x)
         goal[1] += self.np_random.uniform(-dist_y, dist_y)
+        if self.adapt_dict["mode"] =='test':
+            goal = self.initial_gripper_xpos.copy()
+            goal[2] = 0.4
 
         return goal.copy()
 
