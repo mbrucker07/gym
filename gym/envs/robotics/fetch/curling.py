@@ -176,11 +176,11 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
             decision = self.np_random.uniform(0, 1)
         elif self.adapt_dict["mode"] == 'z2':
             decision = self.np_random.uniform(1, 2)
-        elif self.adapt_dict["mode"] == 'z1':
+        elif self.adapt_dict["mode"] == 'z3':
             decision = self.np_random.uniform(2, 3)
-        elif self.adapt_dict["mode"] == 'z1':
+        elif self.adapt_dict["mode"] == 'z4':
             decision = self.np_random.uniform(3, 4)
-        elif self.adapt_dict["mode"] == 'z1':
+        elif self.adapt_dict["mode"] == 'z5':
             decision = self.np_random.uniform(4, 5)
         elif self.adapt_dict["mode"] == 'z6':
             decision = self.np_random.uniform(5, 6)
