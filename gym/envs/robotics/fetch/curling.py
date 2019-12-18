@@ -47,7 +47,6 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.target_offset = np.array([0.4, 0.0, 0.0])
         self.obj_range = 0.1
         self.target_range = 0.3
-        self.init_range = 0.1
         self.distance_threshold = 0.1
         self.reward_type = reward_type
         # TODO: configure adaption parameters
@@ -155,7 +154,7 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # Randomize start position of object.
         if self.has_object:
             object_xpos = self.initial_gripper_xpos[:2]
-            while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < self.init_range:
+            while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < self.obj_range:
                 object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
             object_qpos = self.sim.data.get_joint_qpos('object0:joint')
             assert object_qpos.shape == (7,)
@@ -221,25 +220,19 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.initial_gripper_xpos = self.sim.data.get_site_xpos('robot0:grip').copy()
         #print("Initial_gripper_xpos: {}".format(self.initial_gripper_xpos))
 
-        # initial markers
+        # TODO: initial markers (index 2 nur zufällig, aufpassen!)
         object_xpos = self.initial_gripper_xpos
         object_xpos[2] = 0.4
-        #print("initial:")
-        #print(self.initial_gripper_xpos)
-        #TODO: der index 2 ist nur zufällig gewählt, da muss man aufpassen!
         sites_offset = (self.sim.data.site_xpos - self.sim.model.site_pos).copy()[2]
-        #print("sites_offset:")
-        #print(sites_offset)
 
         site_id = self.sim.model.site_name2id('init_a')
-        self.sim.model.site_pos[site_id] = object_xpos + [self.init_range, self.init_range, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, self.obj_range, 0.0] - sites_offset
         site_id = self.sim.model.site_name2id('init_b')
-        self.sim.model.site_pos[site_id] = object_xpos + [self.init_range, -self.init_range, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, -self.obj_range, 0.0] - sites_offset
         site_id = self.sim.model.site_name2id('init_c')
-        self.sim.model.site_pos[site_id] = object_xpos + [-self.init_range, self.init_range, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, self.obj_range, 0.0] - sites_offset
         site_id = self.sim.model.site_name2id('init_d')
-        self.sim.model.site_pos[site_id] = object_xpos + [-self.init_range, -self.init_range, 0.0] - sites_offset
-
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, -self.obj_range, 0.0] - sites_offset
 
         self.sim.step()
 

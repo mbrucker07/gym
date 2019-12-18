@@ -11,6 +11,8 @@ def goal_distance(goal_a, goal_b):
     assert goal_a.shape == goal_b.shape
     return np.linalg.norm(goal_a - goal_b, axis=-1)
 
+
+
 class FetchPickAndPlaceNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
     def __init__(self, reward_type='sparse'):
 
@@ -44,10 +46,15 @@ class FetchPickAndPlaceNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.has_object = True
         self.target_in_the_air = True
         self.target_offset = 0.0
-        self.obj_range = 0.15
-        self.target_range = 0.15
+        self.obj_range = 0.15 # original = 0.15, default: 0.15
+        self.target_range = 0.3 # original = 0.15, default: 0.3
+        self.air_height = 0.45 # original = 0.45, default: 0.45
         self.distance_threshold = 0.05
         self.reward_type = reward_type
+        # TODO: configure adaption parameters
+        self.adapt_dict=dict()
+        self.adapt_dict["regions"] = ["0_in", "0_out", "1_in", "1_out", "2_in", "2_out"]
+        self.adapt_dict["probs"] = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]
 
         super(FetchPickAndPlaceNewEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
@@ -150,8 +157,8 @@ class FetchPickAndPlaceNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # Randomize start position of object.
         if self.has_object:
             object_xpos = self.initial_gripper_xpos[:2]
-            while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < 0.1:
-                object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
+            #while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < 0.1: # TODO: next line was in loop
+            object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
             object_qpos = self.sim.data.get_joint_qpos('object0:joint')
             assert object_qpos.shape == (7,)
             object_qpos[:2] = object_xpos
@@ -161,18 +168,24 @@ class FetchPickAndPlaceNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         return True
 
     def _sample_goal(self):
-        if self.has_object:
-            goal = self.initial_gripper_xpos[:3] + self.np_random.uniform(-self.target_range, self.target_range, size=3)
-            goal += self.target_offset
-            goal[2] = self.height_offset
-            if self.target_in_the_air and self.np_random.uniform() < 0.5:
-                goal[2] += self.np_random.uniform(0, 0.45)
-            if self.further:
-                goal[0] += self.np_random.uniform(0, 1)
-                goal[0] = self.np_random.uniform(1.6, 2.6)   # empirischer Wert
-                goal[2] = 0.0
-        else:
-            goal = self.initial_gripper_xpos[:3] + self.np_random.uniform(-0.15, 0.15, size=3)
+        goal = self.initial_gripper_xpos[:3].copy()
+        goal[2] = 0.4 # table height
+        regions = self.adapt_dict["regions"]
+        region_index = self.chose_region(self.adapt_dict["probs"])
+        region = regions[region_index]
+
+        if "in" in region:
+            goal[:2] += self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
+        elif "out" in region:
+            goal[0] += np.sign(self.np_random.uniform(-1,1)) * self.np_random.uniform(self.obj_range, self.target_range)
+            goal[1] += np.sign(self.np_random.uniform(-1,1)) * self.np_random.uniform(self.obj_range, self.target_range)
+        if "0" in region:
+            goal[2] += 0
+        elif "1" in region:
+            goal[2] += self.np_random.uniform(0, self.air_height/2)
+        elif "2" in region:
+            goal[2] += self.np_random.uniform(self.air_height/2, self.air_height)
+
         return goal.copy()
 
     def _is_success(self, achieved_goal, desired_goal):
@@ -195,8 +208,81 @@ class FetchPickAndPlaceNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
 
         # Extract information for sampling goals.
         self.initial_gripper_xpos = self.sim.data.get_site_xpos('robot0:grip').copy()
+
+        # TODO: initial markers (index 2 nur zufällig, aufpassen!)
+        object_xpos = self.initial_gripper_xpos
+        object_xpos[2] = 0.4
+        sites_offset = (self.sim.data.site_xpos - self.sim.model.site_pos).copy()[2]
+
+
+        site_id = self.sim.model.site_name2id('init_1')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, self.obj_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('init_2')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, -self.obj_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('init_3')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, self.obj_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('init_4')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, -self.obj_range, 0.0] - sites_offset
+
+        site_id = self.sim.model.site_name2id('init_1a')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, self.obj_range, self.air_height/2] - sites_offset
+        site_id = self.sim.model.site_name2id('init_2a')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, -self.obj_range, self.air_height/2] - sites_offset
+        site_id = self.sim.model.site_name2id('init_3a')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, self.obj_range, self.air_height/2] - sites_offset
+        site_id = self.sim.model.site_name2id('init_4a')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, -self.obj_range, self.air_height/2] - sites_offset
+
+        site_id = self.sim.model.site_name2id('init_1b')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, self.obj_range, self.air_height] - sites_offset
+        site_id = self.sim.model.site_name2id('init_2b')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, -self.obj_range, self.air_height] - sites_offset
+        site_id = self.sim.model.site_name2id('init_3b')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, self.obj_range, self.air_height] - sites_offset
+        site_id = self.sim.model.site_name2id('init_4b')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, -self.obj_range, self.air_height] - sites_offset
+
+        site_id = self.sim.model.site_name2id('mark0a')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range, self.target_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark1a')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range, -self.target_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark2a')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range, self.target_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark3a')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range, -self.target_range, 0.0] - sites_offset
+
+        site_id = self.sim.model.site_name2id('mark0b')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range, self.target_range, self.air_height/2] - sites_offset
+        site_id = self.sim.model.site_name2id('mark1b')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range, -self.target_range, self.air_height/2] - sites_offset
+        site_id = self.sim.model.site_name2id('mark2b')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range, self.target_range, self.air_height/2] - sites_offset
+        site_id = self.sim.model.site_name2id('mark3b')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range, -self.target_range, self.air_height/2] - sites_offset
+
+        site_id = self.sim.model.site_name2id('mark0c')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range, self.target_range, self.air_height] - sites_offset
+        site_id = self.sim.model.site_name2id('mark1c')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range, -self.target_range, self.air_height] - sites_offset
+        site_id = self.sim.model.site_name2id('mark2c')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range, self.target_range, self.air_height] - sites_offset
+        site_id = self.sim.model.site_name2id('mark3c')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range, -self.target_range, self.air_height] - sites_offset
+
+        self.sim.step()
+
         if self.has_object:
             self.height_offset = self.sim.data.get_site_xpos('object0')[2]
 
     def render(self, mode='human', width=500, height=500):
         return super(FetchPickAndPlaceNewEnv, self).render(mode, width, height)
+
+
+    def chose_region(self, probs):
+        random = self.np_random.uniform(0,1)
+        acc = 0
+        for i, p in enumerate(probs):
+            acc += p
+            if random < acc:
+                return i
+        print(acc)
