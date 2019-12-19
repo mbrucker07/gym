@@ -45,13 +45,16 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.has_object = True
         self.target_in_the_air = False
         self.target_offset = np.array([0.4, 0.0, 0.0])
-        self.obj_range = 0.1
-        self.target_range = 0.3
-        self.distance_threshold = 0.1
+        # TODO: configure env parameters
+        self.obj_range = 0.1 # default = 0.1
+        self.target_range_x = 0.1 # default = 0.1
+        self.target_range_y = 0.2 # default = 0.2
+        self.distance_threshold = 0.05 # default = 0.05
         self.reward_type = reward_type
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
-        self.adapt_dict["mode"] = "uniform"
+        self.adapt_dict["regions"] = ["z0", "z1", "z2", "z3", "z4", "z5"]
+        self.adapt_dict["probs"] = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]
 
         super(FetchCurlingEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
@@ -154,8 +157,8 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # Randomize start position of object.
         if self.has_object:
             object_xpos = self.initial_gripper_xpos[:2]
-            while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < self.obj_range:
-                object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
+            #while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < self.obj_range: # TODO next line was in loop
+            object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
             object_qpos = self.sim.data.get_joint_qpos('object0:joint')
             assert object_qpos.shape == (7,)
             object_qpos[:2] = object_xpos
@@ -165,6 +168,16 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         return True
 
     def _sample_goal(self):
+        goal = self.initial_gripper_xpos[:3].copy()
+        goal[2] = 0.4  # table height
+        regions = self.adapt_dict["regions"]
+        region_index = self.chose_region(self.adapt_dict["probs"])
+        region = regions[region_index]
+
+        goal[0] += 2*region_index*self.target_range_x
+        goal[0] += self.np_random.uniform(-self.target_range_x, self.target_range_x)
+        goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y)
+        """
         diag = self.sim.data.get_site_xpos('mark1b').copy()[:3] - self.sim.data.get_site_xpos('mark0a').copy()[:3]
         dist_x = diag[0]/2
         dist_y = diag[1]/2
@@ -195,7 +208,7 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         if self.adapt_dict["mode"] =='test':
             goal = self.initial_gripper_xpos.copy()
             goal[2] = 0.4
-
+        """
         return goal.copy()
 
     def _is_success(self, achieved_goal, desired_goal):
@@ -234,6 +247,35 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         site_id = self.sim.model.site_name2id('init_d')
         self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, -self.obj_range, 0.0] - sites_offset
 
+        site_id = self.sim.model.site_name2id('mark0a')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark0b')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark1a')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark1b')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark2a')
+        self.sim.model.site_pos[site_id] = object_xpos + [3*self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark2b')
+        self.sim.model.site_pos[site_id] = object_xpos + [3*self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark3a')
+        self.sim.model.site_pos[site_id] = object_xpos + [5*self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark3b')
+        self.sim.model.site_pos[site_id] = object_xpos + [5*self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark4a')
+        self.sim.model.site_pos[site_id] = object_xpos + [7*self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark4b')
+        self.sim.model.site_pos[site_id] = object_xpos + [7*self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark5a')
+        self.sim.model.site_pos[site_id] = object_xpos + [9*self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark5b')
+        self.sim.model.site_pos[site_id] = object_xpos + [9*self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark6a')
+        self.sim.model.site_pos[site_id] = object_xpos + [11*self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark6b')
+        self.sim.model.site_pos[site_id] = object_xpos + [11*self.target_range_x, self.target_range_y, 0.0] - sites_offset
+
         self.sim.step()
 
 
@@ -242,3 +284,12 @@ class FetchCurlingEnv(robot_env.RobotEnv, gym.utils.EzPickle):
 
     def render(self, mode='human', width=500, height=500):
         return super(FetchCurlingEnv, self).render(mode, width, height)
+
+    def chose_region(self, probs):
+        random = self.np_random.uniform(0,1)
+        acc = 0
+        for i, p in enumerate(probs):
+            acc += p
+            if random < acc:
+                return i
+        print(acc)
