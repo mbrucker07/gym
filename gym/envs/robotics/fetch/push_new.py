@@ -210,7 +210,6 @@ class FetchPushNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # Move end effector into position. # TODO: changed that to the left
         #gripper_target = np.array([-0.498, 0.005, -0.431 + self.gripper_extra_height]) + self.sim.data.get_site_xpos('robot0:grip')
         gripper_target = self.middle_point + self.gripper_extra_height #+ self.sim.data.get_site_xpos('robot0:grip')
-        print("site_xipos: {}".format(self.sim.data.get_site_xpos('robot0:grip')))
         gripper_target[0] -= self.target_range_x
         gripper_target[1] += self.target_range_y
         gripper_rotation = np.array([1., 0., 1., 0.])
