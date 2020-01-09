@@ -174,8 +174,8 @@ class FetchPushNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         region = regions[region_index]
 
         if region == "z0":
-            goal[0] += self.target_range_x
-            goal[1] -= self.target_range_y
+            goal[0] -= self.target_range_x
+            goal[1] += self.target_range_y
         elif region == "z1":
             goal[0] += self.target_range_x
             goal[1] += self.target_range_y
@@ -186,8 +186,15 @@ class FetchPushNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
             goal[0] -= self.target_range_x
             goal[1] -= self.target_range_y
 
+        # made sure that there is some distance (distance_threshold) between goal and the wall
+        if region == "z0":
+            goal[1] += self.np_random.uniform(-self.target_range_y+self.distance_threshold, self.target_range_y)
+        elif region == "z3":
+            goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y - self.distance_threshold)
+        else:
+            goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y)
+
         goal[0] += self.np_random.uniform(-self.target_range_x, self.target_range_x)
-        goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y)
 
         return goal.copy()
 
