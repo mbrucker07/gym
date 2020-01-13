@@ -53,7 +53,7 @@ class FetchPushNewEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
         self.adapt_dict["regions"] = ["z0", "z1", "z2", "z3"]
-        self.adapt_dict["probs"] = [1/4, 1/4, 1/4, 1/4]
+        self.adapt_dict["probs"] = [0, 0, 0, 1]
 
         super(FetchPushNewEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
