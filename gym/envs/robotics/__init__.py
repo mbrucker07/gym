@@ -4,6 +4,8 @@ from gym.envs.robotics.fetch.pick_and_place import FetchPickAndPlaceEnv
 from gym.envs.robotics.fetch.push import FetchPushEnv
 from gym.envs.robotics.fetch.reach import FetchReachEnv
 
+from gym.envs.robotics.fetch.pick_obstacle import FetchPickObstacleEnv
+from gym.envs.robotics.fetch.push_obstacle import FetchPushObstacleEnv
 from gym.envs.robotics.fetch.pick_and_throw import FetchPickAndThrowEnv
 from gym.envs.robotics.fetch.slide_new import FetchSlideNewEnv
 from gym.envs.robotics.fetch.push_new import FetchPushNewEnv
