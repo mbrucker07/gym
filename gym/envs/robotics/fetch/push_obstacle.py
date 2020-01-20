@@ -53,8 +53,8 @@ class FetchPushObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
         self.adapt_dict["field"] = [1.3, 0.75, 0.6, 0.25, 0.35, 0.2]
-        self.adapt_dict["obstacles"] = [[1.3 - 0.07, 0.75, 0.6 - 0.18, 0.18, 0.04, 0.1]]
-        self.adapt_dict["spaces"] = [30, 30, 10] # [50, 50, 3]
+        self.adapt_dict["obstacles"] = [[1.3 - 0.07, 0.75, 0.6 - 0.1, 0.18, 0.04, 0.1]]
+        self.adapt_dict["spaces"] = [30, 30, 10] # [30, 30, 10]
 
         super(FetchPushObstacleEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
