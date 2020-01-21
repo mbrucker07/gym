@@ -40,7 +40,7 @@ class FetchPickObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         n_substeps = 20
         self.further= False
         self.gripper_extra_height = 0.0
-        self.block_gripper = True
+        self.block_gripper = False
         self.has_object = True
         self.target_in_the_air = False
         self.target_offset = 0.0
