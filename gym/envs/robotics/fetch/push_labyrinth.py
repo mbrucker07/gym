@@ -5,13 +5,13 @@ import numpy as np
 from gym.envs.robotics import rotations, robot_env, utils
 
 # Ensure we get the path separator correct on windows
-MODEL_XML_PATH = os.path.join('fetch', 'pick_noobstacle.xml')
+MODEL_XML_PATH = os.path.join('fetch', 'push_labyrinth.xml')
 
 def goal_distance(goal_a, goal_b):
     assert goal_a.shape == goal_b.shape
     return np.linalg.norm(goal_a - goal_b, axis=-1)
 
-class FetchPickNoObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
+class FetchPushLabyrinthEnv(robot_env.RobotEnv, gym.utils.EzPickle):
     def __init__(self, reward_type='sparse'):
 
         """Initializes a new Fetch environment.
@@ -40,24 +40,26 @@ class FetchPickNoObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         n_substeps = 20
         self.further= False
         self.gripper_extra_height = 0.0
-        self.block_gripper = False
+        self.block_gripper = True
         self.has_object = True
         self.target_in_the_air = False
         self.target_offset = 0.0
         self.obj_range = 0.06 # originally 0.15
-        self.target_range_x = 0.2 # entire table: 0.125
-        self.target_range_y = 0.10 # entire table: 0.175
+        self.target_range_x = 0.1 # entire table: 0.125
+        self.target_range_y = 0.1 # entire table: 0.175
         self.distance_threshold = 0.05
         self.reward_type = reward_type
 
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
         self.adapt_dict["field"] = [1.3, 0.75, 0.6, 0.25, 0.35, 0.2]
-        self.adapt_dict["obstacles"] = []
-        self.adapt_dict["spaces"] = [30, 30, 10] # [30, 30, 10]
-        self.adapt_dict["z_penalty"] = 1
+        self.adapt_dict["obstacles"] = [[1.3, 0.75, 0.6 - 0.15, 0.11, 0.02, 0.05],
+                                        [1.3 - 0.13, 0.75, 0.6 - 0.15, 0.02, 0.25, 0.05],
+                                        [1.3 + 0.13, 0.75, 0.6 - 0.15, 0.02, 0.25, 0.05]]
+        self.adapt_dict["spaces"] = [40, 40, 6] # [30, 30, 10]
+        self.adapt_dict["z_penalty"] = 10# [30, 30, 10]
 
-        super(FetchPickNoObstacleEnv, self).__init__(
+        super(FetchPushLabyrinthEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
             initial_qpos=initial_qpos)
 
@@ -232,7 +234,7 @@ class FetchPickNoObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
             self.height_offset = self.sim.data.get_site_xpos('object0')[2]
 
     def render(self, mode='human', width=500, height=500):
-        return super(FetchPickNoObstacleEnv, self).render(mode, width, height)
+        return super(FetchPushLabyrinthEnv, self).render(mode, width, height)
 
     def chose_region(self, probs):
         random = self.np_random.uniform(0,1)

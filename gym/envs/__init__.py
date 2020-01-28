@@ -434,6 +434,13 @@ for reward_type in ['sparse', 'dense']:
     )
 
     register(
+        id='FetchPushLabyrinth{}-v1'.format(suffix),
+        entry_point='gym.envs.robotics:FetchPushLabyrinthEnv',
+        kwargs=kwargs,
+        max_episode_steps=100,
+    )
+
+    register(
         id='FetchPickObstacle{}-v1'.format(suffix),
         entry_point='gym.envs.robotics:FetchPickObstacleEnv',
         kwargs=kwargs,
