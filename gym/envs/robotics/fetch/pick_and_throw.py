@@ -38,16 +38,29 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         }
         model_path = MODEL_XML_PATH
         n_substeps = 20
-        self.further= True
-        self.gripper_extra_height = 0.2
+        self.further= False
+        self.gripper_extra_height = 0.0
         self.block_gripper = False
         self.has_object = True
-        self.target_in_the_air = True
+        self.target_in_the_air = False
         self.target_offset = 0.0
-        self.obj_range = 0.15
-        self.target_range = 0.15
+        self.obj_range = 0.06 # originally 0.15
+        self.target_range_x = 0.2 # entire table: 0.125
+        self.target_range_y = 0.3 # entire table: 0.175
         self.distance_threshold = 0.05
         self.reward_type = reward_type
+
+        # TODO: configure adaption parameters
+        self.adapt_dict=dict()
+        self.adapt_dict["field"] = [1.55, 0.75, 0.6, 0.5, 0.35, 0.2]
+        self.adapt_dict["obstacles"] = [[1.55 + 0.02, 0.75, 0.6 - 0.15, 0.02, 0.35, 0.05],
+                                        [1.55 + 0.48, 0.75, 0.6 - 0.15, 0.02, 0.35, 0.05],
+                                        [1.55 + 0.25, 0.75 + 0.33, 0.6 - 0.15, 0.21, 0.02, 0.05],
+                                        [1.55 + 0.25, 0.75 - 0.33, 0.6 - 0.15, 0.21, 0.02, 0.05]]
+
+
+        self.adapt_dict["spaces"] = [30, 30, 10] # [50, 50, 3]
+        self.adapt_dict["z_penalty"] = 1
 
         super(FetchPickAndThrowEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
@@ -150,8 +163,9 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # Randomize start position of object.
         if self.has_object:
             object_xpos = self.initial_gripper_xpos[:2]
-            while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < 0.1:
-                object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
+            # while np.linalg.norm(object_xpos - self.initial_gripper_xpos[:2]) < 0.1: # TODO: next line was in loop
+            object_xpos = self.initial_gripper_xpos[:2] + self.np_random.uniform(-self.obj_range, self.obj_range,
+                                                                                 size=2)
             object_qpos = self.sim.data.get_joint_qpos('object0:joint')
             assert object_qpos.shape == (7,)
             object_qpos[:2] = object_xpos
@@ -161,18 +175,11 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         return True
 
     def _sample_goal(self):
-        if self.has_object:
-            goal = self.initial_gripper_xpos[:3] + self.np_random.uniform(-self.target_range, self.target_range, size=3)
-            goal += self.target_offset
-            goal[2] = self.height_offset
-            if self.target_in_the_air and self.np_random.uniform() < 0.5:
-                goal[2] += self.np_random.uniform(0, 0.45)
-            if self.further:
-                goal[0] += self.np_random.uniform(0, 1)
-                goal[0] = self.np_random.uniform(1.6, 2.6)   # empirischer Wert
-                goal[2] = 0.0
-        else:
-            goal = self.initial_gripper_xpos[:3] + self.np_random.uniform(-0.15, 0.15, size=3)
+        goal = self.target_center.copy()
+
+        goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y)
+        goal[0] += self.np_random.uniform(-self.target_range_x, self.target_range_x)
+
         return goal.copy()
 
     def _is_success(self, achieved_goal, desired_goal):
@@ -185,8 +192,14 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         utils.reset_mocap_welds(self.sim)
         self.sim.forward()
 
-        # Move end effector into position.
-        gripper_target = np.array([-0.498, 0.005, -0.431 + self.gripper_extra_height]) + self.sim.data.get_site_xpos('robot0:grip')
+        # TODO: initial markers (index 3 nur zufällig, aufpassen!)
+        self.target_center = self.sim.data.get_site_xpos('target_center')
+        self.init_center = self.sim.data.get_site_xpos('init_center')
+        sites_offset = (self.sim.data.site_xpos - self.sim.model.site_pos).copy()[3]
+
+        # Move end effector into position. # TODO: changed that to the left
+        #gripper_target = np.array([-0.498, 0.005, -0.431 + self.gripper_extra_height]) + self.sim.data.get_site_xpos('robot0:grip')
+        gripper_target = self.init_center + self.gripper_extra_height #+ self.sim.data.get_site_xpos('robot0:grip')
         gripper_rotation = np.array([1., 0., 1., 0.])
         self.sim.data.set_mocap_pos('robot0:mocap', gripper_target)
         self.sim.data.set_mocap_quat('robot0:mocap', gripper_rotation)
@@ -195,8 +208,42 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
 
         # Extract information for sampling goals.
         self.initial_gripper_xpos = self.sim.data.get_site_xpos('robot0:grip').copy()
+        object_xpos = self.initial_gripper_xpos
+        object_xpos[2] = 0.4 # table height
+
+        site_id = self.sim.model.site_name2id('init_1')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, self.obj_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('init_2')
+        self.sim.model.site_pos[site_id] = object_xpos + [self.obj_range, -self.obj_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('init_3')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, self.obj_range, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('init_4')
+        self.sim.model.site_pos[site_id] = object_xpos + [-self.obj_range, -self.obj_range, 0.0] - sites_offset
+
+
+        site_id = self.sim.model.site_name2id('mark1')
+        self.sim.model.site_pos[site_id] = self.target_center + [self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark2')
+        self.sim.model.site_pos[site_id] = self.target_center + [-self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark3')
+        self.sim.model.site_pos[site_id] = self.target_center + [self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        site_id = self.sim.model.site_name2id('mark4')
+        self.sim.model.site_pos[site_id] = self.target_center + [-self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+
+
+        self.sim.step()
+
         if self.has_object:
             self.height_offset = self.sim.data.get_site_xpos('object0')[2]
 
     def render(self, mode='human', width=500, height=500):
         return super(FetchPickAndThrowEnv, self).render(mode, width, height)
+
+    def chose_region(self, probs):
+        random = self.np_random.uniform(0,1)
+        acc = 0
+        for i, p in enumerate(probs):
+            acc += p
+            if random < acc:
+                return i
+        print(acc)
