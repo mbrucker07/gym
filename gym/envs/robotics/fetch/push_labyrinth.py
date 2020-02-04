@@ -56,7 +56,7 @@ class FetchPushLabyrinthEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.adapt_dict["obstacles"] = [[1.3 - 0.1, 0.75, 0.6 - 0.1, 0.11, 0.02, 0.1],
                                         [1.3 - 0.23, 0.75, 0.6 - 0.1, 0.02, 0.35, 0.1],
                                         [1.3 + 0.03, 0.75, 0.6 - 0.1, 0.02, 0.2, 0.1]]
-        self.adapt_dict["spaces"] = [30, 30, 10] # [30, 30, 10]
+        self.adapt_dict["spaces"] = [20, 20, 10] # [30, 30, 10]
         self.adapt_dict["z_penalty"] = 10# [30, 30, 10]
 
         super(FetchPushLabyrinthEnv, self).__init__(
@@ -74,7 +74,13 @@ class FetchPushLabyrinthEnv(robot_env.RobotEnv, gym.utils.EzPickle):
             return -(d > self.distance_threshold).astype(np.float32)
         else:
             return -d
-
+    """    
+    def is_inside_goal_space(self, goal):
+        assert goal.shape == (3,)
+        if (self.target_center[0] - self.target_range_x <= goal[0] <= self.target_center[0] + self.target_range_x) and 
+            (self.target_center[1] - self.target_range_y <= goal[1] <= self.target_center[1] + self.target_range_y) and
+            (self.target_center[2] )
+    """
     # RobotEnv methods
     # ----------------------------
 

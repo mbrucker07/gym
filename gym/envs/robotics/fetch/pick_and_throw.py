@@ -44,22 +44,24 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.has_object = True
         self.target_in_the_air = False
         self.target_offset = 0.0
-        self.obj_range = 0.06 # originally 0.15
-        self.target_range_x = 0.03 # entire table: 0.125
-        self.target_range_y = 0.1 # entire table: 0.175
+        self.obj_range = 0.06
+        self.target_range_x = 0.1
+        self.target_range_y = 0.06
         self.distance_threshold = 0.05
         self.reward_type = reward_type
 
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
         self.adapt_dict["field"] = [1.55, 0.75, 0.6, 0.5, 0.35, 0.2]
-        self.adapt_dict["obstacles"] = [[1.55 + 0.02, 0.75, 0.6 - 0.15, 0.02, 0.35, 0.05],
-                                        [1.55 + 0.48, 0.75, 0.6 - 0.15, 0.02, 0.35, 0.05],
-                                        [1.55 + 0.25, 0.75 + 0.33, 0.6 - 0.15, 0.21, 0.02, 0.05],
-                                        [1.55 + 0.25, 0.75 - 0.33, 0.6 - 0.15, 0.21, 0.02, 0.05]]
-
-
-        self.adapt_dict["spaces"] = [30, 30, 10] # [50, 50, 3]
+        self.adapt_dict["obstacles"] = [[1.55 + 0.01, 0.75, 0.6 - 0.15, 0.01, 0.35, 0.05],
+                                        [1.55 + 0.49, 0.75, 0.6 - 0.15, 0.01, 0.35, 0.05],
+                                        [1.55 + 0.25, 0.75 + 0.34, 0.6 - 0.15, 0.25, 0.01, 0.05],
+                                        [1.55 + 0.25, 0.75 - 0.34, 0.6 - 0.15, 0.25, 0.01, 0.05],
+                                        [1.55 + 0.25, 0.75, 0.6 - 0.15, 0.01, 0.35, 0.05],
+                                        [1.55 + 0.25, 0.75 + 0.17, 0.6 - 0.15, 0.25, 0.01, 0.05],
+                                        [1.55 + 0.25, 0.75 , 0.6 - 0.15, 0.25, 0.01, 0.05],
+                                        [1.55 + 0.25, 0.75 - 0.17, 0.6 - 0.15, 0.25, 0.01, 0.05]]
+        self.adapt_dict["spaces"] = [50, 50, 6] # [50, 50, 6]
         self.adapt_dict["z_penalty"] = 1
 
         super(FetchPickAndThrowEnv, self).__init__(
@@ -175,10 +177,14 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         return True
 
     def _sample_goal(self):
-        goal = self.target_center.copy()
 
-        goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y)
-        goal[0] += self.np_random.uniform(-self.target_range_x, self.target_range_x)
+        #goal = self.target_center.copy()
+
+        index = int(np.floor(self.np_random.uniform(0, 8)))
+        goal = self.targets[index]
+
+        #goal[1] += self.np_random.uniform(-self.target_range_y, self.target_range_y)
+        #goal[0] += self.np_random.uniform(-self.target_range_x, self.target_range_x)
 
         return goal.copy()
 
@@ -193,7 +199,17 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.sim.forward()
 
         # TODO: initial markers (index 3 nur zufällig, aufpassen!)
-        self.target_center = self.sim.data.get_site_xpos('target_center')
+        self.target_1 = self.sim.data.get_site_xpos('target_1')
+        self.target_2 = self.sim.data.get_site_xpos('target_2')
+        self.target_3 = self.sim.data.get_site_xpos('target_3')
+        self.target_4 = self.sim.data.get_site_xpos('target_4')
+        self.target_5 = self.sim.data.get_site_xpos('target_5')
+        self.target_6 = self.sim.data.get_site_xpos('target_6')
+        self.target_7 = self.sim.data.get_site_xpos('target_7')
+        self.target_8 = self.sim.data.get_site_xpos('target_8')
+
+        self.targets = [self.target_1, self.target_2, self.target_3, self.target_4, self.target_5, self.target_6, self.target_7, self.target_8]
+
         self.init_center = self.sim.data.get_site_xpos('init_center')
         sites_offset = (self.sim.data.site_xpos - self.sim.model.site_pos).copy()[3]
 
@@ -222,13 +238,13 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
 
 
         site_id = self.sim.model.site_name2id('mark1')
-        self.sim.model.site_pos[site_id] = self.target_center + [self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = self.target_1 + [self.target_range_x, self.target_range_y, 0.0] - sites_offset
         site_id = self.sim.model.site_name2id('mark2')
-        self.sim.model.site_pos[site_id] = self.target_center + [-self.target_range_x, self.target_range_y, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = self.target_1 + [-self.target_range_x, self.target_range_y, 0.0] - sites_offset
         site_id = self.sim.model.site_name2id('mark3')
-        self.sim.model.site_pos[site_id] = self.target_center + [self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = self.target_1 + [self.target_range_x, -self.target_range_y, 0.0] - sites_offset
         site_id = self.sim.model.site_name2id('mark4')
-        self.sim.model.site_pos[site_id] = self.target_center + [-self.target_range_x, -self.target_range_y, 0.0] - sites_offset
+        self.sim.model.site_pos[site_id] = self.target_1 + [-self.target_range_x, -self.target_range_y, 0.0] - sites_offset
 
 
         self.sim.step()
