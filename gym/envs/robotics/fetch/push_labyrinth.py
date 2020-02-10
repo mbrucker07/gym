@@ -45,8 +45,8 @@ class FetchPushLabyrinthEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.target_in_the_air = False
         self.target_offset = 0.0
         self.obj_range = 0.06 # originally 0.15
-        self.target_range_x = 0.01 # entire table: 0.125
-        self.target_range_y = 0.01 # entire table: 0.175
+        self.target_range_x = 0.06 # entire table: 0.125
+        self.target_range_y = 0.06 # entire table: 0.175
         self.distance_threshold = 0.05
         self.reward_type = reward_type
 

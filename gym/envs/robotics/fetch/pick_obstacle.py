@@ -45,7 +45,7 @@ class FetchPickObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.target_in_the_air = False
         self.target_offset = 0.0
         self.obj_range = 0.06 # originally 0.15
-        self.target_range_x = 0.15 # entire table: 0.125
+        self.target_range_x = 0.2 # entire table: 0.125
         self.target_range_y = 0.10 # entire table: 0.175
         self.distance_threshold = 0.05
         self.reward_type = reward_type
@@ -53,7 +53,7 @@ class FetchPickObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         # TODO: configure adaption parameters
         self.adapt_dict=dict()
         self.adapt_dict["field"] = [1.3, 0.75, 0.6, 0.25, 0.35, 0.2]
-        self.adapt_dict["obstacles"] = [[1.3, 0.75, 0.6 - 0.18, 0.25, 0.04, 0.1]]
+        self.adapt_dict["obstacles"] = [[1.3, 0.75, 0.6 - 0.125, 0.25, 0.04, 0.075]]
         self.adapt_dict["spaces"] = [30, 30, 10] # [50, 50, 3]
         self.adapt_dict["z_penalty"] = 1
 
