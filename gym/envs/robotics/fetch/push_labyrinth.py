@@ -56,7 +56,7 @@ class FetchPushLabyrinthEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.adapt_dict["obstacles"] = [[1.3 - 0.1, 0.75, 0.5, 0.11, 0.02, 0.1],
                                         [1.3 - 0.23, 0.75, 0.5, 0.02, 0.35, 0.1],
                                         [1.3 + 0.03, 0.75, 0.5, 0.02, 0.2, 0.1]]
-        self.adapt_dict["spaces"] = [13, 18, 1] # [30, 30, 10]
+        self.adapt_dict["spaces"] = [13, 18, 4] # [30, 30, 10]
         self.adapt_dict["z_penalty"] = 1
 
         super(FetchPushLabyrinthEnv, self).__init__(
