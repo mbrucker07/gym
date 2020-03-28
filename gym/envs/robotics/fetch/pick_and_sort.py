@@ -68,8 +68,6 @@ class FetchPickAndSortEnv(robot_env.RobotEnv, gym.utils.EzPickle):
                                         [1.375 + 0, 0.75 - 0.4375, 0.6 - 0.15, 0.01, 0.0875, 0.05],
                                         [1.375 - 0.175, 0.75 - 0.4375, 0.6 - 0.15, 0.01, 0.0875, 0.05],
                                         [1.375 - 0.35, 0.75 - 0.4375, 0.6 - 0.15, 0.01, 0.0875, 0.05]]
-        self.adapt_dict["spaces"] = [40, 55, 6] # [50, 50, 6]
-        self.adapt_dict["z_penalty"] = 1
 
         super(FetchPickAndSortEnv, self).__init__(
             model_path=model_path, n_substeps=n_substeps, n_actions=4,
