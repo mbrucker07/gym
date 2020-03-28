@@ -54,7 +54,7 @@ class FetchPickObstacleEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         self.adapt_dict=dict()
         self.adapt_dict["field"] = [1.3, 0.75, 0.6, 0.25, 0.35, 0.2]
         self.adapt_dict["obstacles"] = [[1.3, 0.75, 0.6 - 0.125, 0.25, 0.04, 0.075]]
-        self.adapt_dict["spaces"] = [2, 9, 3] # [50, 50, 3]
+        self.adapt_dict["spaces"] = [30, 30, 10] # [50, 50, 3]
         self.adapt_dict["z_penalty"] = 1
 
         super(FetchPickObstacleEnv, self).__init__(
