@@ -147,6 +147,7 @@ class FetchPickAndThrowEnv(robot_env.RobotEnv, gym.utils.EzPickle):
         lookat = self.sim.data.body_xpos[body_id]
         for idx, value in enumerate(lookat):
             self.viewer.cam.lookat[idx] = value
+	# video settings: 01: 2.5/132/-50  // 02: 2.5/100/-50
         self.viewer.cam.distance = 2.5
         self.viewer.cam.azimuth = 100.
         self.viewer.cam.elevation = -50.
